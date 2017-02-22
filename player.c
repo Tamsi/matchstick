@@ -10,25 +10,19 @@
 
 #include "my.h"
 
-int parse_map(char **map)
+int parse_mapline(char **map, int line)
 {
-  int i;
   int j;
   int count;
 
-  i = 0;
   count = 0;
-  while (map[i])
-    {
-      j = 0;
-      while (map[i][j] != '\0')
-        {
-          if (map[i][j] == '|')
-            count++;
-          j++;
-        }
-      i++;
-    }
+  j = 0;
+  while (map[line][j] != '\0')
+  {
+    if (map[line][j] == '|')
+      count++;
+    j++;
+  }
   return (count);
 }
 
@@ -37,7 +31,7 @@ void matches_remover(char **map, int line, int matches, int player)
   int count;
   int i;
 
-  i = 0;
+  i = my_strlen(map[line]);
   count = 0;
   while (count < matches)
     {
@@ -46,7 +40,7 @@ void matches_remover(char **map, int line, int matches, int player)
           count++;
           map[line][i] = ' ';
         }
-      i++;
+      i--;
     }
     if (player == 1)
     {
@@ -63,50 +57,100 @@ void matches_remover(char **map, int line, int matches, int player)
 		  my_put_nbr(line);
     }
   write(1, "\n", 1);
+  disp_map(map);
 }
 
 void ai_play(char **map, char *total_map)
 {
-	int l;
-	int m;
+	t_heap turn;
 	int i;
-	int count;
+  int j;
+  int res;
+  int nim;
 
-	my_putstr("AI's turn...\n");
-	count = 0;
-	i = 0;
-  l = rand() % my_getnbr(total_map);
-  while (map[l][i] != '\0')
+  nim = nim_sum(map);
+  turn = max_line(map);
+  i = 0;
+  if (turn.max % 2 != 0)
+    turn.max -= 1;
+  if (nim != 0)
   {
-  	if (map[l][i] == '|')
-  		count++;
-  	i++;
+    printf("%s\n", "rr");
+    while (map[i] != NULL)
+    {
+      j = 0;
+      res = 0;
+      while (map[i][j] != '\0')
+      {
+        if (map[i][j] == '|')
+          res++;
+        j++;
+      }
+      if ((res ^ nim) < res)
+      {
+        printf("nim = %i, res = %i, xor = %i\n", nim, res, res ^ nim);
+        matches_remover(map, i, res ^ nim, 0);
+        break;
+      }
+      i++;
+    }
   }
-  if (count == 0)
-  	ai_play(map, total_map);
-  if (m == 0)
-  	m = rand() % count;
-  matches_remover(map, l, m, 0);
-  disp_map(map);
-  write(1, "\n", 1);
-	play(map, total_map);
+  else
+    matches_remover(map, turn.id, turn.max, 0);
 }
 
-void play(char **map, char *total_map)
+int parse_gnl(char *str)
 {
-  char *line;
-  char *matches;
+  int i;
+
+  i = 0;
+  if (str == NULL)
+    return (1);
+  while (str[i])
+  {
+    if (str[i] < '0' || str[i] > '9')
+    {
+      my_putstr("Error: invalid input (positive number expected)\n");
+      return (1);
+    }
+    i++;
+  }
+  return (0);
+}
+
+int play(char **map, char *total_map, char *max_matches)
+{
+  char *line = NULL;
+  char *matches = NULL;
   int l;
   int m;
 
-  my_putstr("Your turn:\nLine: ");
-  line = get_next_line(0);
+  while (parse_gnl(line) != 0)
+  {
+    my_putstr("Line: ");
+    line = get_next_line(0);
+    if (line == NULL)
+      return (-1);
+  }
   l = my_getnbr(line);
-  my_putstr("Matches: ");
-  matches = get_next_line(0);
+  if (line_error(l, total_map) != 0)
+  {
+    play(map, total_map, max_matches);
+    return (1);
+  }
+  while (parse_gnl(matches) != 0)
+  {
+    my_putstr("Matches: ");
+    matches = get_next_line(0);
+    if (matches == NULL)
+      return (-1);
+  }
   m = my_getnbr(matches);
+  if (matches_error(m, map, max_matches, l) != 0)
+  {
+    play(map, total_map, max_matches);
+    return (1);
+  }
   matches_remover(map, l, m, 1);
-  disp_map(map);
-  write(1, "\n", 1);
-  ai_play(map, total_map);
+  return (0);
 }

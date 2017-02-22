@@ -5,11 +5,14 @@
 ## Login   <tbesson@epitech.net>
 ## 
 ## Started on  Tue Dec  6 14:57:19 2016 Tamsi Besson
-## Last update Tue Feb 14 13:45:11 2017 Tamsi Besson
+## Last update Wed Feb 22 20:37:46 2017 Tamsi Besson
 ##
 
 SRC=   	 	main.c \
 		player.c \
+		map.c \
+		error.c \
+		algorithm.c \
 		lib/my_getnbr.c \
 		lib/my_put_nbr.c \
 		lib/my_putnbr_base.c \
